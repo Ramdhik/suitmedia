@@ -3,7 +3,7 @@ import { Idea } from '@/types/idea';
 export async function getInitialIdeas(): Promise<{ ideas: Idea[]; total: number }> {
   let allIdeas: Idea[] = [];
   let page = 1;
-  const pageSize = 100; // Batasi ke 100, sesuai batas umum API
+  const pageSize = 100; 
 
   while (true) {
     try {

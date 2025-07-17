@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { useEffect } from 'react';
 import { Idea } from '@/types/idea';
 
 type Props = {
@@ -17,7 +16,7 @@ export default function IdeaCard({ idea }: Props) {
     year: 'numeric',
   });
 
-  // Fungsi untuk menyimpan data ide ke sessionStorage saat diklik DAN menampilkan di console.log
+
   const saveIdeaToSessionStorage = () => {
     try {
       sessionStorage.setItem('selectedIdea', JSON.stringify(idea));
@@ -30,8 +29,8 @@ export default function IdeaCard({ idea }: Props) {
   return (
     <Card className="overflow-hidden rounded-lg shadow hover:shadow-lg transition cursor-pointer" data-id={idea.id}>
       <Link href={`/ideas/${idea.id}`} passHref onClick={saveIdeaToSessionStorage}>
-        {' '}
-        {/* Tambahkan onClick di sini */}
+
+
         {idea.medium_image[0]?.url && <Image src={idea.medium_image[0].url} alt={idea.title} width={400} height={250} className="w-full object-cover" />}
         <CardContent className="p-4">
           <p className="text-xs text-gray-500 mb-1">{publishDate.toUpperCase()}</p>

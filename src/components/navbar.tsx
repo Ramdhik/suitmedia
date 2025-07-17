@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 const Navbar = () => {
   const [show, setShow] = useState(true);
-  const lastScrollY = useRef(0); // pakai useRef agar tidak reset saat re-render
+  const lastScrollY = useRef(0);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -41,7 +42,7 @@ const Navbar = () => {
         {/* Logo */}
         <Link href="/">
           <div className="flex items-center text-white font-bold text-lg cursor-pointer">
-            <span className="bg-white text-orange-500 px-2 py-1 rounded mr-1">suit</span>media
+            <Image src="/logo.png" alt="Logo" width={100} height={100} className="mr-2" />
           </div>
         </Link>
 
