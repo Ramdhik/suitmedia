@@ -1,0 +1,52 @@
+'use client';
+
+import Image from 'next/image';
+import { Card, CardContent } from '@/components/ui/card';
+import Link from 'next/link';
+import { useEffect } from 'react';
+import { Idea } from '@/types/idea';
+
+type Props = {
+  idea: Idea;
+};
+
+export default function IdeaCard({ idea }: Props) {
+  const publishDate = new Date(idea.published_at).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  // Prefetch saat hover
+  useEffect(() => {
+    const handleMouseEnter = () => {
+      console.log(`Prefetching idea with id: ${idea.id}`); // Debug log
+      fetch(`https://suitmedia-backend.suitdev.com/api/ideas/${idea.id}`, {
+        headers: { Accept: 'application/json' },
+      }).catch((error) => console.error(`Prefetch failed for ID ${idea.id}:`, error));
+    };
+
+    const cardElement = document.querySelector(`[data-id="${idea.id}"]`);
+    if (cardElement) {
+      cardElement.addEventListener('mouseenter', handleMouseEnter);
+    }
+
+    return () => {
+      if (cardElement) {
+        cardElement.removeEventListener('mouseenter', handleMouseEnter);
+      }
+    };
+  }, [idea.id]);
+
+  return (
+    <Card className="overflow-hidden rounded-lg shadow hover:shadow-lg transition cursor-pointer" data-id={idea.id}>
+      <Link href={`/ideas/${idea.id}`} passHref>
+        {idea.medium_image[0]?.url && <Image src={idea.medium_image[0].url} alt={idea.title} width={400} height={250} className="w-full object-cover" />}
+        <CardContent className="p-4">
+          <p className="text-xs text-gray-500 mb-1">{publishDate.toUpperCase()}</p>
+          <h2 className="text-base font-semibold">{idea.title}</h2>
+        </CardContent>
+      </Link>
+    </Card>
+  );
+}
