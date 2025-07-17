@@ -17,30 +17,21 @@ export default function IdeaCard({ idea }: Props) {
     year: 'numeric',
   });
 
-  // Prefetch saat hover
-  useEffect(() => {
-    const handleMouseEnter = () => {
-      console.log(`Prefetching idea with id: ${idea.id}`); // Debug log
-      fetch(`https://suitmedia-backend.suitdev.com/api/ideas/${idea.id}`, {
-        headers: { Accept: 'application/json' },
-      }).catch((error) => console.error(`Prefetch failed for ID ${idea.id}:`, error));
-    };
+  // Fungsi untuk menyimpan data ide ke sessionStorage saat diklik DAN menampilkan di console.log
+  const saveIdeaToSessionStorage = () => {
+    try {
+      sessionStorage.setItem('selectedIdea', JSON.stringify(idea));
 
-    const cardElement = document.querySelector(`[data-id="${idea.id}"]`);
-    if (cardElement) {
-      cardElement.addEventListener('mouseenter', handleMouseEnter);
+    } catch (error) {
+      console.error(`Error saving idea ID ${idea.id} to sessionStorage:`, error);
     }
-
-    return () => {
-      if (cardElement) {
-        cardElement.removeEventListener('mouseenter', handleMouseEnter);
-      }
-    };
-  }, [idea.id]);
+  };
 
   return (
     <Card className="overflow-hidden rounded-lg shadow hover:shadow-lg transition cursor-pointer" data-id={idea.id}>
-      <Link href={`/ideas/${idea.id}`} passHref>
+      <Link href={`/ideas/${idea.id}`} passHref onClick={saveIdeaToSessionStorage}>
+        {' '}
+        {/* Tambahkan onClick di sini */}
         {idea.medium_image[0]?.url && <Image src={idea.medium_image[0].url} alt={idea.title} width={400} height={250} className="w-full object-cover" />}
         <CardContent className="p-4">
           <p className="text-xs text-gray-500 mb-1">{publishDate.toUpperCase()}</p>

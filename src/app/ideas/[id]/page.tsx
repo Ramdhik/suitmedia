@@ -1,60 +1,67 @@
-import { notFound } from 'next/navigation';
+'use client';
 
-type IdeaDetail = {
-  id: string;
-  title: string;
-  content: string;
+import { useEffect, useState } from 'react';
+import { Idea } from '@/types/idea';
+import { Button } from '@/components/ui/button';
+
+type PageProps = {
+  params: {
+    id: string;
+  };
 };
 
-// Ambil data awal dari getInitialIdeas
-export async function getInitialIdeas(): Promise<{ ideas: IdeaDetail[]; total: number }> {
-  let allIdeas: IdeaDetail[] = [];
-  let page = 1;
-  const pageSize = 100;
+export default function IdeaDetailPage({ params }: PageProps) {
+  const [idea, setIdea] = useState<Idea | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  while (true) {
-    const res = await fetch(`https://suitmedia-backend.suitdev.com/api/ideas?page[number]=${page}&page[size]=${pageSize}&append[]=small_image&append[]=medium_image&sort=-published_at`, {
-      cache: 'no-store',
-      headers: { Accept: 'application/json' },
-    });
-
-    if (!res.ok) {
-      if (res.status === 422) {
-        console.error('Unprocessable Entity error, stopping fetch:', res.statusText);
-        break;
+  useEffect(() => {
+    // Pastikan kode ini hanya berjalan di sisi klien (browser)
+    if (typeof window !== 'undefined') {
+      try {
+        const storedIdea = sessionStorage.getItem('selectedIdea');
+        if (storedIdea) {
+          const parsedIdea: Idea = JSON.parse(storedIdea);
+          setIdea(parsedIdea);
+          console.log('Data ide dari sessionStorage:', parsedIdea);
+        } else {
+          setError('Data ide tidak ditemukan di sessionStorage.');
+          console.warn("Tidak ada 'selectedIdea' di sessionStorage.");
+          // Opsional: Anda bisa melakukan fetch data dari API di sini
+          // jika data tidak ada di sessionStorage, menggunakan params.id
+        }
+      } catch (e) {
+        console.error('Gagal mengambil atau mem-parsing ide dari sessionStorage:', e);
+        setError('Gagal memuat detail ide.');
+      } finally {
+        setLoading(false);
       }
-      throw new Error(`Failed to fetch ideas for page ${page}: ${res.statusText}`);
     }
+  }, []); // Array dependensi kosong agar hanya berjalan sekali saat komponen di-mount
 
-    const data = await res.json();
-    if (data.data && Array.isArray(data.data)) {
-      allIdeas = [...allIdeas, ...data.data];
-    } else {
-      break;
-    }
-
-    const total = data.meta?.total || 0;
-    const lastPage = Math.ceil(total / pageSize);
-
-    if (page >= lastPage || allIdeas.length >= total) break;
-    page++;
+  if (loading) {
+    return <div>Memuat detail ide...</div>;
   }
 
-  return { ideas: allIdeas, total: allIdeas.length };
-}
-
-export default async function IdeaPage({ params }: { params: { id: string } }) {
-  const { ideas } = await getInitialIdeas(); // Ambil semua data di sini
-  const idea = ideas.find((item) => item.id === params.id);
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   if (!idea) {
-    notFound();
+    return <div>Ide tidak ditemukan atau terjadi kesalahan.</div>;
   }
 
+  // Tampilkan detail ide
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">{idea.title}</h1>
-      <div className="prose" dangerouslySetInnerHTML={{ __html: idea.content }} />
+    <div className="container mx-auto p-4 mt-20">
+      <h1 className="text-3xl font-bold mb-4">{idea.title}</h1>
+      <p className="text-gray-600 mb-2">Dipublikasikan pada: {new Date(idea.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+
+      <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: idea.content }} />
+      {/* Jika ada field lain di objek Idea, Anda bisa menampilkannya di sini */}
+      <Button className="mt-10" onClick={() => window.history.back()}>
+        Kembali ke daftar ide
+      </Button>
     </div>
   );
 }

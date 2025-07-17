@@ -35,7 +35,6 @@ export default function IdeasControls({ pageSize, setPageSize, sort, setSort, to
               <SelectItem value="10">10</SelectItem>
               <SelectItem value="20">20</SelectItem>
               <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem> {/* Tambah opsi 100 */}
             </SelectContent>
           </Select>
         </div>

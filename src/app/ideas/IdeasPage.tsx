@@ -6,6 +6,7 @@ import IdeaCard from '@/app/ideas/IdeaCard';
 import IdeasControls from './IdeasControls';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 import { Idea } from '@/types/idea';
+import { Parallax } from 'react-parallax';
 
 type Props = {
   initialIdeas: Idea[];
@@ -19,68 +20,50 @@ export default function IdeasPage({ initialIdeas, total }: Props) {
   const [sort, setSort] = useState('-published_at');
   const [loading, setLoading] = useState(false);
 
-  // Hitung total pages berdasarkan total dan pageSize
   const totalPages = Math.ceil(total / Number(pageSize));
 
-  // Slice ideas berdasarkan pageNumber dan pageSize
-  const pagedIdeas = ideas.slice((pageNumber - 1) * Number(pageSize), pageNumber * Number(pageSize));
+  const pagedIdeas = ideas
+    .slice()
+    .sort((a, b) => {
+      // Sortir dari yang terbaru (descending)
+      if (sort === '-published_at') {
+        return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
+      }
+      // Sortir dari yang terlama (ascending)
+      if (sort === 'published_at') {
+        // Tambahkan kondisi ini
+        return new Date(a.published_at).getTime() - new Date(b.published_at).getTime();
+      }
+      return 0; // Fallback jika 'sort' tidak cocok dengan kondisi di atas
+    })
+    .slice((pageNumber - 1) * Number(pageSize), pageNumber * Number(pageSize));
 
   const handlePrev = () => {
     if (pageNumber > 1) setPageNumber(pageNumber - 1);
   };
 
-  const handleNext = async () => {
-    const nextPage = pageNumber + 1;
-    const maxLoadedPage = Math.ceil(ideas.length / Number(pageSize));
-
-    if (nextPage > maxLoadedPage) {
-      setLoading(true);
-      try {
-        const res = await fetch(`https://suitmedia-backend.suitdev.com/api/ideas?page[number]=${nextPage}&page[size]=${pageSize}&append[]=small_image&append[]=medium_image&sort=${sort}`, { headers: { Accept: 'application/json' } });
-        if (!res.ok) throw new Error(`Failed to fetch ideas: ${res.statusText}`);
-        const data = await res.json();
-        setIdeas((prev) => [...prev, ...data.data]);
-      } catch (error) {
-        console.error('Error loading next page:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    if (nextPage <= totalPages) setPageNumber(nextPage);
+  const handleNext = () => {
+    if (pageNumber < totalPages) setPageNumber(pageNumber + 1);
   };
 
-  // Fungsi untuk memuat ulang dengan sort baru
-  const handleSortChange = async (newSort: string) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`https://suitmedia-backend.suitdev.com/api/ideas?page[number]=1&page[size]=${pageSize}&append[]=small_image&append[]=medium_image&sort=${newSort}`, { headers: { Accept: 'application/json' } });
-      if (!res.ok) throw new Error(`Failed to fetch ideas: ${res.statusText}`);
-      const data = await res.json();
-      setIdeas(data.data);
-      setSort(newSort);
-      setPageNumber(1); // Reset ke halaman 1 saat sort berubah
-    } catch (error) {
-      console.error('Error sorting ideas:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleSortChange = (newSort: string) => {
+    setSort(newSort);
+    setPageNumber(1);
   };
 
-  // Fungsi untuk mengubah pageSize dan reset pageNumber
   const handlePageSizeChange = (newPageSize: string) => {
     setPageSize(newPageSize);
-    setPageNumber(1); // Reset pageNumber ke 1 saat pageSize berubah
+    setPageNumber(1);
   };
 
   return (
-    <div>
-      {/* Hero Image Section */}
-      <div className="relative h-[400px] bg-cover bg-center" style={{ backgroundImage: `url(/oke.jpg)` }}>
-        <div className="absolute inset-0 bg-opacity-40" />
+    <div className="mt-10">
+      <Parallax bgImage="/oke.jpg" strength={500} className="h-[400px]">
+        <div className="absolute inset-0 bg-black bg-opacity-40" />
         <div className="relative z-10 flex items-center justify-center h-full">
-          <h1 className="text-4xl md:text-6xl font-bold text-white text-center drop-shadow-lg">Ideas & Insights</h1>
+          <h1 className="text-4xl md:text-6xl font-bold text-white text-center mt-40 drop-shadow-lg">Ideas & Insights</h1>
         </div>
-      </div>
+      </Parallax>
 
       <div className="max-w-5xl mx-auto p-6">
         <IdeasControls pageSize={pageSize} setPageSize={handlePageSizeChange} sort={sort} setSort={handleSortChange} total={total} />
@@ -99,7 +82,6 @@ export default function IdeasPage({ initialIdeas, total }: Props) {
           </div>
         )}
 
-        {/* Pagination */}
         <div className="flex justify-center mt-8">
           <Pagination>
             <PaginationContent>
@@ -110,7 +92,7 @@ export default function IdeasPage({ initialIdeas, total }: Props) {
                 Page {pageNumber} of {totalPages}
               </PaginationItem>
               <PaginationItem>
-                <PaginationNext onClick={handleNext} className={pageNumber === totalPages || loading ? 'pointer-events-none opacity-50' : ''} />
+                <PaginationNext onClick={handleNext} className={pageNumber === totalPages ? 'pointer-events-none opacity-50' : ''} />
               </PaginationItem>
             </PaginationContent>
           </Pagination>
